@@ -1,23 +1,32 @@
 pipeline {
-   agent any
+    agent any
 
-   stages {
-      stage('Checkout') {
-         steps {
-            checkout scm
-         }
-      }
+    parameters {
+        string(
+            name: 'CUTOFF', 
+            defaultValue: '500', 
+            description: 'Liczba wierszy do zachowania ze zbioru danych',
+            trim: true
+        )
+    }
 
-      stage('Process dataset') {
-         steps {
-            sh 'bash ./process_data.sh'
-         }
-      }
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
-      stage('Archive artifacts') {
-         steps {
-            archiveArtifacts artifacts: 'output_dataset/*.csv, process_log.txt', onlyIfSuccessful: true
-         }
-      }
-   }
+        stage('Process dataset') {
+            steps {
+                sh "bash ./process_data.sh ${params.CUTOFF}"
+            }
+        }
+
+        stage('Archive artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'output_dataset/*.csv, process_log.txt', onlyIfSuccessful: true
+            }
+        }
+    }
 }
