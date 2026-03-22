@@ -15,7 +15,7 @@ pipeline {
             //Wypisz wartość parametru w konsoli (To nie jest polecenie bash, tylko groovy!)
             echo "INPUT_TEXT: ${INPUT_TEXT}"
             //Wywołaj w konsoli komendę "figlet", która generuje ASCII-art
-            sh "figlet \"${INPUT_TEXT}\" | tee output.txt"
+            sh "echo \"${INPUT_TEXT}\" > output.txt"
          }
       }
       stage('Goodbye!') {
