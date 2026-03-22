@@ -29,4 +29,10 @@ pipeline {
             }
         }
     }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'process_log.txt', allowEmptyArchive: true
+        }
+    }
 }

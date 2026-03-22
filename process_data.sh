@@ -20,7 +20,7 @@ wget -q -O "${RAW_FILE}" "${DATA_URL}"
 
 HEADER_LINE="$(head -n 1 "${RAW_FILE}")"
 
-tail -n +2 "${RAW_FILE}" | shuf | head -n "${CUTOFF_VAL}" > "${SHUFFLED_CUT_BODY}"
+tail -n +2 "${RAW_FILE}" | shuf -n "${CUTOFF_VAL}" > "${SHUFFLED_CUT_BODY}"
 
 TOTAL_ROWS="$(wc -l < "${SHUFFLED_CUT_BODY}")"
 TRAIN_ROWS=$((TOTAL_ROWS * 70 / 100))
@@ -36,7 +36,7 @@ tail -n "${TEST_ROWS}" "${OUTPUT_DIR}/remaining_body.tmp" > "${OUTPUT_DIR}/test_
 { echo "${HEADER_LINE}"; cat "${OUTPUT_DIR}/dev_body.tmp"; } > "${OUTPUT_DIR}/hotel_booking_dev.csv"
 { echo "${HEADER_LINE}"; cat "${OUTPUT_DIR}/test_body.tmp"; } > "${OUTPUT_DIR}/hotel_booking_test.csv"
 
-cut -d',' -f1-8 "${RAW_FILE}" | head -n $((CUTOFF_VAL + 1)) > "${OUTPUT_DIR}/hotel_booking_reduced.csv"
+head -n $((CUTOFF_VAL + 1)) "${RAW_FILE}" | cut -d',' -f1-8 > "${OUTPUT_DIR}/hotel_booking_reduced.csv"
 
 rm -f "${OUTPUT_DIR}"/*.tmp "${SHUFFLED_CUT_BODY}"
 
