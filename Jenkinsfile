@@ -1,28 +1,22 @@
 pipeline {
    agent any
-   //Definijuemy parametry, które będzie można podać podczas wywoływania zadania
-   parameters {
-     string (
-         defaultValue: 'Hello World!',
-         description: 'Tekst, którym chcesz przywitać świat',
-         name: 'INPUT_TEXT',
-         trim: false
-        )
-   }
+
    stages {
-      stage('Hello') {
+      stage('Checkout') {
          steps {
-            //Wypisz wartość parametru w konsoli (To nie jest polecenie bash, tylko groovy!)
-            echo "INPUT_TEXT: ${INPUT_TEXT}"
-            //Wywołaj w konsoli komendę "figlet", która generuje ASCII-art
-            sh "echo \"${INPUT_TEXT}\" > output.txt"
+            checkout scm
          }
       }
-      stage('Goodbye!') {
+
+      stage('Process dataset') {
          steps {
-            echo 'Goodbye!'
-            //Zarchiwizuj wynik
-            archiveArtifacts 'output.txt'
+            sh 'bash ./process_data.sh'
+         }
+      }
+
+      stage('Archive artifacts') {
+         steps {
+            archiveArtifacts artifacts: 'output_dataset/*.csv, process_log.txt', onlyIfSuccessful: true
          }
       }
    }
