@@ -5,7 +5,7 @@ pipeline {
         string(
             name: 'DOCKER_IMAGE',
             defaultValue: 'szymonjozwiakzip/ium:v1.0',
-            description: 'Gotowy obraz Docker Hub (np. szymonjozwiakzip/ium:v1.0)',
+            description: 'obraz docker hub',
             trim: true
         )
     }
