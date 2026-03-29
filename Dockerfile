@@ -12,6 +12,6 @@ WORKDIR /app
 
 COPY . /app
 
-RUN pip3 install --no-cache-dir kaggle pandas
+RUN pip3 install --no-cache-dir kaggle pandas numpy scikit-learn
 
 CMD ["/bin/bash"]

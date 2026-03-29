@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(
+            name: 'DOCKER_IMAGE',
+            defaultValue: 'szymonjozwiakzip/ium:v1.0',
+            description: 'Gotowy obraz Docker Hub (np. szymonjozwiakzip/ium:v1.0)',
+            trim: true
+        )
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Compute dataset stats in Docker Hub image') {
+            agent {
+                docker {
+                    image "${params.DOCKER_IMAGE}"
+                    reuseNode true
+                }
+            }
+            steps {
+                sh 'python3 ./lab01.py dataset-stats --input ./prepared_data/hotel_booking_train.csv --output ./prepared_data/dataset_stats_train.txt'
+            }
+        }
+
+        stage('Archive artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'prepared_data/dataset_stats_*.txt, prepared_data/*.csv, output_dataset/*.csv', allowEmptyArchive: true
+            }
+        }
+    }
+}
