@@ -3,6 +3,12 @@ pipeline {
 
     parameters {
         string(
+            name: 'CUTOFF',
+            defaultValue: '500',
+            description: 'liczba rekordow do przygotowania',
+            trim: true
+        )
+        string(
             name: 'DOCKER_IMAGE',
             defaultValue: 'szymonjozwiakzip/ium:v1.0',
             description: 'obraz docker hub',
@@ -14,6 +20,18 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Prepare dataset in Docker Hub image') {
+            agent {
+                docker {
+                    image "${params.DOCKER_IMAGE}"
+                    reuseNode true
+                }
+            }
+            steps {
+                sh 'python3 ./lab01.py create-dataset --cutoff ${CUTOFF}'
             }
         }
 
@@ -31,7 +49,7 @@ pipeline {
 
         stage('Archive artifacts') {
             steps {
-                archiveArtifacts artifacts: 'prepared_data/dataset_stats_*.txt, prepared_data/*.csv, output_dataset/*.csv', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'prepared_data/dataset_stats_*.txt, prepared_data/*.csv, output_dataset/*.csv, process_log.txt', allowEmptyArchive: true
             }
         }
     }
