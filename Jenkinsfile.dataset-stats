@@ -31,7 +31,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'python3 ./lab01.py create-dataset --cutoff ${CUTOFF}'
+                sh "python3 ./lab01.py create-dataset --cutoff ${params.CUTOFF}"
             }
         }
 

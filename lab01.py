@@ -3,10 +3,17 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
 
 def load_raw_dataset() -> pd.DataFrame:
+    local_candidates = [
+        Path("output_dataset/hotel_bookings_raw.csv"),
+        Path("data/hotel_bookings_raw.csv"),
+    ]
+    for candidate in local_candidates:
+        if candidate.exists():
+            return pd.read_csv(candidate)
+
     data_url = "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-11/hotels.csv"
     return pd.read_csv(data_url)
 
@@ -24,19 +31,14 @@ def create_dataset(cutoff: int) -> None:
     hotel_data["children"] = hotel_data["children"].fillna(0)
     hotel_data_clean = hotel_data.dropna(subset=["country"])
 
-    train_data, temp_data = train_test_split(
-        hotel_data_clean,
-        test_size=0.4,
-        random_state=42,
-        stratify=hotel_data_clean["is_canceled"],
-    )
+    shuffled = hotel_data_clean.sample(frac=1.0, random_state=42).reset_index(drop=True)
+    n_rows = len(shuffled)
+    n_train = int(n_rows * 0.6)
+    n_dev = int(n_rows * 0.2)
 
-    dev_data, test_data = train_test_split(
-        temp_data,
-        test_size=0.5,
-        random_state=42,
-        stratify=temp_data["is_canceled"],
-    )
+    train_data = shuffled.iloc[:n_train]
+    dev_data = shuffled.iloc[n_train:n_train + n_dev]
+    test_data = shuffled.iloc[n_train + n_dev:]
 
     train_data.to_csv(output_dir / "hotel_booking_train.csv", index=False)
     dev_data.to_csv(output_dir / "hotel_booking_dev.csv", index=False)
