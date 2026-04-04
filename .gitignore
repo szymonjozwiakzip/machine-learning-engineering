@@ -1,2 +1,25 @@
 .vscode/
 prepared_data/
+
+# Generated data and experiment artifacts
+output_dataset/
+models/
+predictions/
+process_log.txt
+
+# Python cache and build files
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments and local Python config
+.venv/
+venv/
+env/
+.python-version
+
+# Jupyter
+.ipynb_checkpoints/

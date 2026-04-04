@@ -14,4 +14,6 @@ COPY . /app
 
 RUN pip3 install --no-cache-dir kaggle pandas numpy scikit-learn
 
-CMD ["/bin/bash"]
+RUN pip3 install --no-cache-dir joblib
+
+CMD ["/bin/bash", "-lc", "python3 train_nn.py && python3 predict_nn.py"]
