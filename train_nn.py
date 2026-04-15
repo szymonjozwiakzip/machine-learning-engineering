@@ -13,7 +13,13 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 TARGET_COLUMN = "is_canceled"
 
 
-def build_model(numeric_features: list[str], categorical_features: list[str]) -> Pipeline:
+def build_model(
+    numeric_features: list[str],
+    categorical_features: list[str],
+    hidden_layer_sizes: tuple[int, ...] = (64, 32),
+    activation: str = "relu",
+    max_iter: int = 80,
+) -> Pipeline:
     numeric_pipeline = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
@@ -36,10 +42,10 @@ def build_model(numeric_features: list[str], categorical_features: list[str]) ->
     )
 
     classifier = MLPClassifier(
-        hidden_layer_sizes=(64, 32),
-        activation="relu",
+        hidden_layer_sizes=hidden_layer_sizes,
+        activation=activation,
         solver="adam",
-        max_iter=80,
+        max_iter=max_iter,
         early_stopping=True,
         random_state=42,
     )
@@ -47,7 +53,13 @@ def build_model(numeric_features: list[str], categorical_features: list[str]) ->
     return Pipeline(steps=[("preprocessor", preprocessor), ("classifier", classifier)])
 
 
-def train(train_path: Path, model_path: Path) -> None:
+def train(
+    train_path: Path,
+    model_path: Path,
+    hidden_layer_sizes: tuple[int, ...] = (64, 32),
+    activation: str = "relu",
+    max_iter: int = 80,
+) -> None:
     data = pd.read_csv(train_path)
     if TARGET_COLUMN not in data.columns:
         raise ValueError(f"Brakuje kolumny docelowej: {TARGET_COLUMN}")
@@ -58,7 +70,7 @@ def train(train_path: Path, model_path: Path) -> None:
     numeric_features = x_train.select_dtypes(include=["number", "bool"]).columns.tolist()
     categorical_features = [c for c in x_train.columns if c not in numeric_features]
 
-    model = build_model(numeric_features, categorical_features)
+    model = build_model(numeric_features, categorical_features, hidden_layer_sizes, activation, max_iter)
     model.fit(x_train, y_train)
 
     model_path.parent.mkdir(parents=True, exist_ok=True)
@@ -80,13 +92,33 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path("models/hotel_mlp.joblib"),
         help="Ścieżka zapisu wytrenowanego modelu",
     )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=80,
+        help="Maksymalna liczba epok trenowania (max_iter MLPClassifier)",
+    )
+    parser.add_argument(
+        "--hidden-layers",
+        type=str,
+        default="64,32",
+        help="Rozmiary warstw ukrytych oddzielone przecinkami, np. 128,64,32",
+    )
+    parser.add_argument(
+        "--activation",
+        type=str,
+        default="relu",
+        choices=["relu", "tanh", "logistic"],
+        help="Funkcja aktywacji neuronów",
+    )
     return parser
 
 
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-    train(args.train, args.model)
+    hidden_layer_sizes = tuple(int(x) for x in args.hidden_layers.split(","))
+    train(args.train, args.model, hidden_layer_sizes, args.activation, args.epochs)
 
 
 if __name__ == "__main__":

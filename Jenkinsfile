@@ -3,10 +3,27 @@ pipeline {
 
     parameters {
         string(
-            name: 'CUTOFF', 
-            defaultValue: '500', 
-            description: 'Liczba wierszy do zachowania ze zbioru danych',
+            name: 'CUTOFF',
+            defaultValue: '500',
+            description: 'Liczba wierszy do zachowania ze zbioru danych (0 = wszystkie)',
             trim: true
+        )
+        string(
+            name: 'EPOCHS',
+            defaultValue: '80',
+            description: 'Maksymalna liczba epok trenowania',
+            trim: true
+        )
+        string(
+            name: 'HIDDEN_LAYERS',
+            defaultValue: '64,32',
+            description: 'Rozmiary warstw ukrytych sieci (oddzielone przecinkami, np. 128,64,32)',
+            trim: true
+        )
+        choice(
+            name: 'ACTIVATION',
+            choices: ['relu', 'tanh', 'logistic'],
+            description: 'Funkcja aktywacji neuronów'
         )
     }
 
@@ -17,7 +34,7 @@ pipeline {
             }
         }
 
-        stage('Create dataset in Dockerfile container') {
+        stage('Create dataset') {
             agent {
                 dockerfile {
                     filename 'Dockerfile'
@@ -26,20 +43,33 @@ pipeline {
                 }
             }
             steps {
-                sh 'python3 ./lab01.py create-dataset --cutoff ${CUTOFF}'
+                sh "python3 ./lab01.py create-dataset --cutoff ${params.CUTOFF}"
             }
         }
 
-        stage('Archive artifacts') {
+        stage('Train model') {
+            agent {
+                dockerfile {
+                    filename 'Dockerfile'
+                    dir '.'
+                    reuseNode true
+                }
+            }
             steps {
-                archiveArtifacts artifacts: 'output_dataset/*.csv, prepared_data/*.csv, process_log.txt', allowEmptyArchive: true
+                sh """
+                    python3 ./train_nn.py \
+                        --epochs ${params.EPOCHS} \
+                        --hidden-layers '${params.HIDDEN_LAYERS}' \
+                        --activation ${params.ACTIVATION} \
+                        --model models/hotel_mlp.joblib
+                """
             }
         }
-    }
 
-    post {
-        always {
-            archiveArtifacts artifacts: 'process_log.txt', allowEmptyArchive: true
+        stage('Archive model') {
+            steps {
+                archiveArtifacts artifacts: 'models/*.joblib', allowEmptyArchive: false
+            }
         }
     }
 }
